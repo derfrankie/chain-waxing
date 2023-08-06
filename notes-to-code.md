@@ -140,3 +140,13 @@ the script has these functions
 
 
 
+================================================================
+
+Auth Code generieren
+
+http://www.strava.com/oauth/authorize?client_id=111266&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=profile:read_all
+
+Auth Code
+4dd3e51785d69ea44511e61ba6d8f1fff9b2ba7b
+
+
