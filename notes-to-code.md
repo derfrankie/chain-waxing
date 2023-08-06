@@ -133,8 +133,6 @@ I want to create a go script where:
         - if distance - drip_km > drip_interval then wax_state ="Drip Wax Please"
         - if distance - waxed_km > wax_interval then wax_state ="Wax Please"
       - Print a table of the bikes with following information: bikenumber, name, distance, waxed-km, drip-km, wax_state
-      
-
   - Driped
     - Call ShowBikes
     - Ask which bike the user wants to "drip" - he can enter the bikenumber
