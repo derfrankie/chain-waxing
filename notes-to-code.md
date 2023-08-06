@@ -110,19 +110,16 @@ I want to create a go script where:
 
 - the script has 2 global variables: wax_interval = 300 and drip_interval = 100
 - the script has / creates a config file
-- the script can connect to more than one strava accounts
-- has various command line commands (which calls available functions)
-  - addAccount 
-    - The script asks for username and password and writes that to the config file
+the script has these functions
+- Setup
+    - The script uses oath to connect to strava 
     - the script connects to the strava account and reads the profile (getLoggedInAthlete)
-    - add to the profile the username and password and 2 parameters to each bike set to Null : waxed_km, drip_km, wax_state
+    - add to the profile the refresh token and 2 parameters to each bike set to Null : waxed_km, drip_km, wax_state
     - write the profile to the config file
-    - continue to showBikes
-  - showBikes
+- showBikes
     - if the config file has no profile saved
-      - call addAcount
-    - for each account in the config
-      - connect to strava with the username password from the profile
+      - call Setup
+    - else
       - read the current information for bikes from the config and update the distance via getLoggedInAthlete, give each bike a number (bikeNumber) and keep them globally in Memory
       - Write the updated distance for each bike to the config file
       - Print the First and Second Name of the user on the screen
@@ -133,13 +130,13 @@ I want to create a go script where:
         - if distance - drip_km > drip_interval then wax_state ="Drip Wax Please"
         - if distance - waxed_km > wax_interval then wax_state ="Wax Please"
       - Print a table of the bikes with following information: bikenumber, name, distance, waxed-km, drip-km, wax_state
-  - Driped
+- Driped
     - Call ShowBikes
     - Ask which bike the user wants to "drip" - he can enter the bikenumber
     - Update the drip-km to the current distance - write the bike information to the config file
     - Call Showbikes
 
-
+- when the script is started the function Showbikes should be called
 
 
 
