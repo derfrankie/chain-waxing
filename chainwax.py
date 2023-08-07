@@ -19,7 +19,10 @@ def setup_oauth():
     AUTHORIZATION_URL = "http://www.strava.com/oauth/authorize"
     STRAVA_CLIENT_ID = "111266"
     REDIRECT_URI = "http://localhost:8000"
+    TOKEN_URL = "https://www.strava.com/api/v3/oauth/token"
+    STRAVA_CLIENT_SECRET = '246e2176d0d32be095c8c920e2766aff825a6e1d'
 
+    auth_code = None
     class TempServerHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
             nonlocal auth_code
@@ -40,7 +43,7 @@ def setup_oauth():
     webbrowser.open(auth_url)
 
     # Give server some time to handle the request. Increase if needed.
-    threading.Event().wait(60)
+    threading.Event().wait(15)
 
     # Use the auth_code to fetch the access token
     if auth_code:
@@ -50,6 +53,7 @@ def setup_oauth():
             'code': auth_code,
             'grant_type': 'authorization_code'
         })
+        print(token_response.json())
         token_info = token_response.json()
 
         # Return token_info
