@@ -12,10 +12,8 @@ config_file = 'config.json'
 bikes = []  # List to keep bikes in memory
 base_url = "https://www.strava.com/api/v3/"
 
-# Function to setup OAuth connection with Strava
 def setup_oauth():
     # Temporary server to capture OAuth callback
-
     AUTHORIZATION_URL = "http://www.strava.com/oauth/authorize"
     STRAVA_CLIENT_ID = "111266"
     REDIRECT_URI = "http://localhost:8000"
@@ -23,12 +21,14 @@ def setup_oauth():
     STRAVA_CLIENT_SECRET = '246e2176d0d32be095c8c920e2766aff825a6e1d'
 
     auth_code = None
+
     class TempServerHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
             nonlocal auth_code
             self.send_response(200, "OK")
             self.end_headers()
-            auth_code = self.path.split("code=")[1]
+            # Extract auth code, but split on '&' to remove additional parameters
+            auth_code = self.path.split("code=")[1].split("&")[0]
             self.wfile.write(b"Authentication successful. You can close this window/tab.")
             self.server.shutdown()
 
@@ -53,7 +53,6 @@ def setup_oauth():
             'code': auth_code,
             'grant_type': 'authorization_code'
         })
-        print(token_response.json())
         token_info = token_response.json()
 
         # Return token_info
@@ -62,6 +61,7 @@ def setup_oauth():
     else:
         print("Authentication failed.")
         return None
+
 
 
 
