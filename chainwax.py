@@ -1,5 +1,9 @@
 import requests
 import json
+import webbrowser
+import http.server
+import socketserver
+import threading
 
 # Global variables
 wax_interval = 300
@@ -10,28 +14,57 @@ base_url = "https://www.strava.com/api/v3/"
 
 # Function to setup OAuth connection with Strava
 def setup_oauth():
-    # Your Strava application details
-    client_id = '111266'
-    client_secret = '246e2176d0d32be095c8c920e2766aff825a6e1d'
-    authorization_code = 'd23ae5943da9eb6e33afd2fe56e19d99be5d5a4f'
+    # Temporary server to capture OAuth callback
 
-    # Exchange authorization_code for a refresh token and access token
-    response = requests.post(
-        "https://www.strava.com/oauth/token",
-        data={
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "code": authorization_code,
-            "grant_type": "authorization_code"
-        }
-    )
-    print(response.json())  # Print the response
-    return response.json()
+    AUTHORIZATION_URL = "http://www.strava.com/oauth/authorize"
+    STRAVA_CLIENT_ID = "111266"
+    REDIRECT_URI = "http://localhost:8000"
+
+    class TempServerHandler(http.server.SimpleHTTPRequestHandler):
+        def do_GET(self):
+            nonlocal auth_code
+            self.send_response(200, "OK")
+            self.end_headers()
+            auth_code = self.path.split("code=")[1]
+            self.wfile.write(b"Authentication successful. You can close this window/tab.")
+            self.server.shutdown()
+
+    # Start the temporary server
+    server_address = ('', 8000)
+    httpd = socketserver.TCPServer(server_address, TempServerHandler)
+
+    threading.Thread(target=httpd.serve_forever).start()
+
+    # Open Strava authentication URL in the default web browser
+    auth_url = f"{AUTHORIZATION_URL}?client_id={STRAVA_CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&approval_prompt=force&scope=profile:read_all"
+    webbrowser.open(auth_url)
+
+    # Give server some time to handle the request. Increase if needed.
+    threading.Event().wait(60)
+
+    # Use the auth_code to fetch the access token
+    if auth_code:
+        token_response = requests.post(TOKEN_URL, data={
+            'client_id': STRAVA_CLIENT_ID,
+            'client_secret': STRAVA_CLIENT_SECRET,
+            'code': auth_code,
+            'grant_type': 'authorization_code'
+        })
+        token_info = token_response.json()
+
+        # Return token_info
+        return token_info
+
+    else:
+        print("Authentication failed.")
+        return None
+
+
 
 # Function to setup config file and Strava connection
 def setup():
     token_info = setup_oauth()
-    
+        
     # Store the access_token in the profile
     headers = {"Authorization": f"Bearer {token_info['access_token']}"}
     profile_response = requests.get(base_url + "athlete", headers=headers).json()
