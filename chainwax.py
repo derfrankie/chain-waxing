@@ -30,7 +30,7 @@ def setup_oauth():
             self.send_header("Content-type", "text/html")
             self.end_headers()
             auth_code = self.path.split("code=")[1].split("&")[0]
-            print(f"Auth code received: {auth_code}")
+            #print(f"Auth code received: {auth_code}")
             self.wfile.write(b"Authentication successful. You can close this window/tab.")
             auth_event.set()
 
@@ -53,7 +53,7 @@ def setup_oauth():
             'code': auth_code,
             'grant_type': 'authorization_code'
         })
-        print(token_response.json())
+        #print(token_response.json())
         token_info = token_response.json()
         return token_info
 
