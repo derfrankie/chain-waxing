@@ -93,11 +93,11 @@ This project is open source, under the [MIT License](https://opensource.org/lice
 
 ## SILCA Videos on Chain maintenance
 
-[Layering Up...Tips for Super Secret Chain Coating](https://www.youtube.com/watch?v=LBcowq02pXw)
+* [Layering Up...Tips for Super Secret Chain Coating](https://www.youtube.com/watch?v=LBcowq02pXw)
 
-[FAQ: Ultimate Chain Stripper + Wax Prep](https://www.youtube.com/watch?v=vIGm2WbyEQ4)
+* [FAQ: Ultimate Chain Stripper + Wax Prep](https://www.youtube.com/watch?v=vIGm2WbyEQ4)
 
-[Chain Maintenance FAQs](https://www.youtube.com/watch?v=0WVZVf04j0M)
+* [Chain Maintenance FAQs](https://www.youtube.com/watch?v=0WVZVf04j0M)
 
 ## Proudly presented by GravelDeluxe
 
