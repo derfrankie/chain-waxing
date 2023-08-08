@@ -1,25 +1,43 @@
+######################################################################
+##
+##    GravelDeluxe Chain Waxing Assistant
+##    
+##    Keep track of your waxed chains with Strava integration
+##
+##    Created by https://graveldeluxe.com
+##
+######################################################################
+
 import requests
 import json
 import webbrowser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
+import time
 
 # Global variables
-wax_interval = 300
-drip_interval = 100
+wax_interval = 1000  # Interval in km between complete waxing of chain
+drip_interval = 300  # Interval in km in between drip waxing (in dry conditions)
+
 config_file = 'config.json'
 bikes = []  # List to keep bikes in memory
 base_url = "https://www.strava.com/api/v3/"
 
+def load_strava_config():
+    with open('strava_config.json', 'r') as file:
+        config = json.load(file)
+    return config
 
 
 def setup_oauth():
+    strava_config = load_strava_config()
+    
+    STRAVA_CLIENT_ID = strava_config['STRAVA_CLIENT_ID']
+    STRAVA_CLIENT_SECRET = strava_config['STRAVA_CLIENT_SECRET']
     AUTHORIZATION_URL = "http://www.strava.com/oauth/authorize"
-    STRAVA_CLIENT_ID = "111266"
     REDIRECT_URI = "http://localhost:8000"
     TOKEN_URL = "https://www.strava.com/api/v3/oauth/token"
-    STRAVA_CLIENT_SECRET = '246e2176d0d32be095c8c920e2766aff825a6e1d'
-
+    
     auth_code = None
     auth_event = threading.Event()
 
@@ -61,11 +79,6 @@ def setup_oauth():
         print("Authentication failed.")
         return None
 
-
-
-
-
-
 # Function to setup config file and Strava connection
 def setup():
     token_info = setup_oauth()
@@ -77,6 +90,7 @@ def setup():
 
     # Add tokens and additional parameters to the profile
     profile_response['refresh_token'] = token_info['refresh_token']
+    profile_response['expires_at'] = token_info['expires_at']  # Storing the expiration time
 
     for bike in profile_response['bikes']:
         bike['waxed_km'] = None
@@ -88,6 +102,48 @@ def setup():
 
     return profile_response
 
+def refresh_token_if_needed(profile):
+    
+    strava_config = load_strava_config()
+    STRAVA_CLIENT_ID = strava_config['STRAVA_CLIENT_ID']
+    STRAVA_CLIENT_SECRET = strava_config['STRAVA_CLIENT_SECRET']
+    current_time = time.time()
+    # If token is expired or will expire in the next minute
+    elapsed_time = current_time - float(profile['expires_at'])
+    if elapsed_time > 21000:
+        TOKEN_URL = "https://www.strava.com/oauth/token"
+        refresh_response = requests.post(TOKEN_URL, data={
+            'client_id': STRAVA_CLIENT_ID,
+            'client_secret': STRAVA_CLIENT_SECRET,
+            'refresh_token': profile['refresh_token'],
+            'grant_type': 'refresh_token'
+        })
+        new_token_info = refresh_response.json()
+
+        # Update profile with new access and refresh tokens and new expiry
+        profile['access_token'] = new_token_info['access_token']
+        profile['refresh_token'] = new_token_info['refresh_token']
+        profile['expires_at'] = new_token_info['expires_at']
+
+        # Save the updated profile to config.json
+        with open(config_file, 'w') as f:
+            json.dump(profile, f)
+    return profile
+
+def clean_bikes(profile, api_bikes):
+    # Extract bike IDs from the API response for quick lookup
+    api_bike_ids = {bike['id'] for bike in api_bikes}
+    
+    for bike in profile['bikes']:
+        # If the bike is missing in the latest API response, mark it as retired
+        if bike['id'] not in api_bike_ids:
+            bike['retired'] = True
+        else:
+            # If the bike was previously marked as retired but is in the latest response, mark it as not retired
+            bike['retired'] = False
+
+    return profile
+
 
 def showBikes():
     try:
@@ -95,6 +151,7 @@ def showBikes():
             profile = json.load(f)
             if not profile or 'bikes' not in profile:
                 raise ValueError("Profile is incomplete.")
+            profile = refresh_token_if_needed(profile)
     except (FileNotFoundError, json.JSONDecodeError, ValueError):
         profile = setup()
 
@@ -107,10 +164,13 @@ def showBikes():
     headers = {"Authorization": f"Bearer {profile['access_token']}"}
     profile_response = requests.get(base_url + "athlete", headers=headers).json()
     
+    profile_response = clean_bikes(profile, profile_response['bikes'])
+
     for bike in bikes:
         for updated_bike in profile_response['bikes']:
             if bike['id'] == updated_bike['id']:
                 bike['converted_distance'] = updated_bike['converted_distance']
+                bike['retired'] = updated_bike['retired']
                 
                 wax_state = "OK"
                 
@@ -129,14 +189,15 @@ def showBikes():
     with open(config_file, 'w') as f:
         json.dump(profile, f)
 
-    print("Bike Table:")
-    header = f"{'Bike Number':<12}{'Name':<20}{'Distance':<10}{'Waxed KM':<10}{'Drip KM':<10}{'Wax State':<15}"
+    print("Welcome to the GravelDeluxe Chain Wax Assistant")
+    header = f"{'Bike Number':<12}{'Name':<20}{'Distance':<10}{'Waxed km':<10}{'Driped km':<10}{'Wax State':<15}"
     print(header)
     print('-' * len(header))  # Print line separator
     
     for idx, bike in enumerate(bikes, 1):
-        row = f"{idx:<12}{bike['name']:<20}{bike['converted_distance']:<10}{bike['waxed_km'] if bike['waxed_km'] else 'N/A':<10}{bike['drip_km'] if bike['drip_km'] else 'N/A':<10}{bike['wax_state']:<15}"
-        print(row)
+        if not bike.get('retired', False):  # Check if the bike isn't marked as retired
+            row = f"{idx:<12}{bike['name']:<20}{bike['converted_distance']:<10}{bike['waxed_km'] if bike['waxed_km'] else 'N/A':<10}{bike['drip_km'] if bike['drip_km'] else 'N/A':<10}{bike['wax_state']:<15}"
+            print(row)
     print()
 
 def dripit():
@@ -191,6 +252,7 @@ def reset():
     showBikes()
 
 def main():
+
     while True:
         showBikes()
         print("-----------------------------------------------------------------------------")
