@@ -4,6 +4,8 @@
 
 This tool assists cyclists in keeping track of when their bicycles need chain maintenance. It connects with Strava's API to pull the total distance ridden for each bike, and based on user's input, provides an estimate of when the next chain waxing or drip is due.
 
+It follows the recommendations from SILCA, the manufacturer I like best, but you can use what you want. See links to their videos below.
+
 ## Features
 
 - **OAuth Integration with Strava**: Securely log in using your Strava account.
@@ -54,7 +56,12 @@ pip install -r requirements.txt
 
 3. Use an external file to store your Strava client ID and secret for security:
 
-Create a file named `strava_config.json` in the root directory:
+Any registered Strava user can obtain the client ID and client secret by first creating an application [here](https://www.strava.com/settings/api) 
+
+The settings for your app should look something like this - with the most important part being the Authorization Callback Domain:
+![](support/strava-app.jpg)
+
+Create a file named `strava_config.json` in the root directory and enter the ids you can get after creating the app:
 
 ```json
 {
@@ -66,7 +73,7 @@ Create a file named `strava_config.json` in the root directory:
 4. Run the script:
 
 ```bash
-python main_script_name.py
+python chainwax.py
 ```
 
 ## Usage
@@ -81,11 +88,14 @@ Contributions, bug reports, and feature requests are welcome! Open an issue or s
 
 ## License
 
-This project is open source, under the [MIT License](LICENSE).
+This project is open source, under the [MIT License](https://opensource.org/license/mit/).
 
----
 
-Make sure to adjust `[repository-link]` and `main_script_name.py` with the actual link and script name respectively. You can also add any more sections as needed, like "Acknowledgements" or "Changelog".
+## SILCA Videos on Chain maintenance
+
+[Layering Up...Tips for Super Secret Chain Coating](https://www.youtube.com/watch?v=LBcowq02pXw)
+[FAQ: Ultimate Chain Stripper + Wax Prep](https://www.youtube.com/watch?v=vIGm2WbyEQ4)
+[Chain Maintenance FAQs](https://www.youtube.com/watch?v=0WVZVf04j0M)
 
 ## Proudly presented by GravelDeluxe
 
