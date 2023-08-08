@@ -172,31 +172,52 @@ def showBikes():
                 bike['converted_distance'] = updated_bike['converted_distance']
                 bike['retired'] = updated_bike['retired']
                 
-                wax_state = "OK"
-                
-                if bike['drip_km']:
-                    if bike['converted_distance'] - bike['drip_km'] > drip_interval:
-                        wax_state = "Drip Wax Please"
-                
-                if bike['waxed_km']:
-                    if bike['converted_distance'] - bike['converted_distance'] > drip_interval:
-                        wax_state = "Drip Wax Please"
-                    if bike['converted_distance'] - bike['waxed_km'] > wax_interval:
+                wax_state = "-"
+
+                # If the bike has been waxed
+
+                drips_per_wax = wax_interval // drip_interval
+
+                if not bike['waxed_km']:
+                    wax_state = "Needs Initial Wax"
+                else:
+                    # Calculate the distance since the last complete wax
+                    distance_since_wax = bike['converted_distance'] - bike['waxed_km']
+
+                    # Check if we're due for another complete wax
+                    if distance_since_wax >= wax_interval:
                         wax_state = "Wax Please"
-                
+                    else:
+                        # Calculate the number of drips since the last wax
+                        drips_since_wax = distance_since_wax // drip_interval
+
+                        # Check if we're due for another drip
+                        if (drips_since_wax * drip_interval) + drip_interval <= distance_since_wax:
+                            wax_state = "Drip Wax Please"
+                        else:
+                            # Calculate the kilometers to the next maintenance event
+                            next_drip_at = ((drips_since_wax + 1) * drip_interval) - distance_since_wax
+                            if drips_since_wax < drips_per_wax:
+                                wax_state = f"{int(next_drip_at)} km to next drip"
+                            else:
+                                wax_state = f"{int(next_drip_at)} km to next complete wax"
+
                 bike['wax_state'] = wax_state
+
+
+
 
     with open(config_file, 'w') as f:
         json.dump(profile, f)
 
     print("Welcome to the GravelDeluxe Chain Wax Assistant")
-    header = f"{'Bike Number':<12}{'Name':<20}{'Distance':<10}{'Waxed km':<10}{'Driped km':<10}{'Wax State':<15}"
+    header = f"{'NR':<3}{'Name':<20}{'Distance':<10}{'Waxed km':<10}{'Driped km':<10}{'Wax State':<25}"
     print(header)
     print('-' * len(header))  # Print line separator
     
     for idx, bike in enumerate(bikes, 1):
         if not bike.get('retired', False):  # Check if the bike isn't marked as retired
-            row = f"{idx:<12}{bike['name']:<20}{bike['converted_distance']:<10}{bike['waxed_km'] if bike['waxed_km'] else 'N/A':<10}{bike['drip_km'] if bike['drip_km'] else 'N/A':<10}{bike['wax_state']:<15}"
+            row = f"{idx:<3}{bike['name']:<20}{bike['converted_distance']:<10}{bike['waxed_km'] if bike['waxed_km'] else 'N/A':<10}{bike['drip_km'] if bike['drip_km'] else 'N/A':<10}{bike['wax_state']:<25}"
             print(row)
     print()
 
