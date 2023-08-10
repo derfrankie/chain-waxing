@@ -110,7 +110,7 @@ def refresh_token_if_needed(profile):
     current_time = time.time()
     # If token is expired or will expire in the next minute
     elapsed_time = current_time - float(profile['expires_at'])
-    if elapsed_time > 21000:
+    if elapsed_time > 1000:
         TOKEN_URL = "https://www.strava.com/oauth/token"
         refresh_response = requests.post(TOKEN_URL, data={
             'client_id': STRAVA_CLIENT_ID,
@@ -164,7 +164,7 @@ def showBikes():
     headers = {"Authorization": f"Bearer {profile['access_token']}"}
     profile_response = requests.get(base_url + "athlete", headers=headers).json()
     
-    profile_response = clean_bikes(profile, profile_response['bikes'])
+    profile = clean_bikes(profile, profile_response['bikes'])
 
     for bike in bikes:
         for updated_bike in profile_response['bikes']:
