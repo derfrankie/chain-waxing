@@ -176,8 +176,9 @@ def showBikes():
 
                 # If the bike has been waxed
 
-                drips_per_wax = wax_interval // drip_interval
+                #drips_per_wax = wax_interval // drip_interval
 
+                # If no initial waxing has been done
                 if not bike['waxed_km']:
                     wax_state = "Needs Initial Wax"
                 else:
@@ -188,21 +189,28 @@ def showBikes():
                     if distance_since_wax >= wax_interval:
                         wax_state = "Wax Please"
                     else:
-                        # Calculate the number of drips since the last wax
-                        drips_since_wax = distance_since_wax // drip_interval
+                        # If no drip data is available, use distance_since_wax
+                        if bike['drip_km'] is None:
+                            distance_since_drip = distance_since_wax
+                        else:
+                            # Calculate the distance since the last drip
+                            distance_since_drip = bike['converted_distance'] - bike['drip_km']
 
                         # Check if we're due for another drip
-                        if (drips_since_wax * drip_interval) + drip_interval <= distance_since_wax:
+                        if distance_since_drip >= drip_interval:
                             wax_state = "Drip Wax Please"
                         else:
                             # Calculate the kilometers to the next maintenance event
-                            next_drip_at = ((drips_since_wax + 1) * drip_interval) - distance_since_wax
-                            if drips_since_wax < drips_per_wax:
-                                wax_state = f"{int(next_drip_at)} km to next drip"
+                            next_drip_at = drip_interval - distance_since_drip
+
+                            if distance_since_wax + next_drip_at >= wax_interval:
+                                wax_state = f"{int(wax_interval - distance_since_wax)} km to next complete wax"
                             else:
-                                wax_state = f"{int(next_drip_at)} km to next complete wax"
+                                wax_state = f"{int(next_drip_at)} km to next drip"
 
                 bike['wax_state'] = wax_state
+
+
 
 
 
